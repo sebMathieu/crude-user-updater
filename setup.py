@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='crude-user-updater',
-    version='0.1.0',
+    version='1.0.0',
     description='Package to update the program of your users to the latest version using a simple archive and an ignore list.',
     long_description=readme,
     author='Sebastien Mathieu',
