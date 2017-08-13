@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
 """ Core functions of the updater. """
 
+
 import os
 import re
 import zipfile
 
 from . import helpers
 
+# Authorship information.
+__author__ = "Sébastien Mathieu"
+__version__ = "1.0.0"
+
 
 def create_archive(path, output_path=None, ignore_list=None, package_name=None, to_remove=None,
                    compression=zipfile.ZIP_DEFLATED):
     """ Create a zip archive.
+
         :param path: Path to the folder to create archive from.
         :param output_path: Path to the output folder.
         :param ignore_list: List of regular expression pattern applied to the full path.
@@ -35,7 +41,7 @@ def create_archive(path, output_path=None, ignore_list=None, package_name=None, 
     package_name = os.path.normpath(package_name)
 
     # Prepare base path
-    base_path=os.path.dirname(path)
+    base_path = os.path.dirname(path)
 
     # Open archive for writing
     archive_path = os.path.join(output_path, package_name) if output_path is not None else package_name
@@ -60,6 +66,7 @@ def create_archive(path, output_path=None, ignore_list=None, package_name=None, 
 
 def apply_archive(in_path, out_path):
     """ Apply an update archive.
+
     :param in_path: Input archive path.
     :param out_path: Output directory path.
     :type in_path: str
@@ -80,3 +87,4 @@ def apply_archive(in_path, out_path):
                     pass  # File already removed
         except KeyError:  # No file to remove since no list is provided
             pass
+
