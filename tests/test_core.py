@@ -18,7 +18,7 @@ class TestCore(unittest.TestCase):
     def test_create_archive(self):
         """ Test basic archive creation. """
         out_name = 'tests/in.zip'
-        updater.create_archive("tests/in", ignore_list=updater.COMMON_FILTERS, package_name=out_name)
+        updater.create_archive("tests/in", ignore_list=updater.COMMON_FILTERS + ['no.+'], package_name=out_name)
 
         # Check
         self.assertTrue(os.path.isfile(out_name))

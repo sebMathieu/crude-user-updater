@@ -33,7 +33,7 @@ def create_archive(path, output_path=None, ignore_list=None, package_name=None, 
     # Prepare ignore list
     if ignore_list is None:
         ignore_list = []
-    regex_list = map(lambda e: re.compile(e), ignore_list)
+    regex_list = [re.compile(e) for e in ignore_list]
 
     # Prepare package name
     if package_name is None:
