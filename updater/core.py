@@ -45,6 +45,8 @@ def create_archive(path, output_path=None, ignore_list=None, package_name=None, 
 
     # Open archive for writing
     archive_path = os.path.join(output_path, package_name) if output_path is not None else package_name
+    if os.path.isfile(archive_path):
+        os.remove(archive_path)
     with zipfile.ZipFile(archive_path, 'w', compression=compression) as out:
         # Iterate on the source path
         for subdir, dirs, files in os.walk(path):
