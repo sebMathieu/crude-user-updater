@@ -85,20 +85,34 @@ def apply_archive(in_path, out_path, backup_path='.'):
 
     # Extract all files
     with zipfile.ZipFile(in_path) as archive:
-        if backup_path is not None:
-            _backup(archive, out_path, backup_path)
-        archive.extractall(out_path, filter(lambda n: n not in helpers.RESERVED_FILES, archive.namelist()))
+        apply_archive(archive, out_path, backup_path)
 
-        # Remove files
-        try:
-            to_remove = archive.read(helpers.TO_REMOVE_FILE).decode().split('\n')
-            for n in to_remove:
-                try:
-                    os.remove('%s/%s' % (out_path, n))
-                except FileNotFoundError:
-                    pass  # File already removed
-        except KeyError:  # No file to remove since no list is provided
-            pass
+
+def apply_zipfile(archive, out_path, backup_path='.'):
+    """ Apply an update archive.
+
+    :param archive: Input archive.
+    :param out_path: Output directory path.
+    :param backup_path: Path of the backup archive. If none, no backup is performed.
+    :type archive: zipfile.ZipFIle
+    :type out_path: str
+    :type backup_path: str
+    """
+
+    if backup_path is not None:
+        _backup(archive, out_path, backup_path)
+    archive.extractall(out_path, filter(lambda n: n not in helpers.RESERVED_FILES, archive.namelist()))
+
+    # Remove files
+    try:
+        to_remove = archive.read(helpers.TO_REMOVE_FILE).decode().split('\n')
+        for n in to_remove:
+            try:
+                os.remove('%s/%s' % (out_path, n))
+            except FileNotFoundError:
+                pass  # File already removed
+    except KeyError:  # No file to remove since no list is provided
+        pass
 
 
 def _backup(archive, out_path, backup_path):
@@ -131,7 +145,7 @@ def restart_program():
 
     try:
         p = psutil.Process(os.getpid())
-        for handler in p.get_open_files() + p.connections():
+        for handler in p.open_files() + p.connections():
             os.close(handler.fd)
     except Exception as e:
         print(e, file=sys.stderr)
