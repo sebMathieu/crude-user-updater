@@ -23,7 +23,7 @@ class TestCore(unittest.TestCase):
         # Check
         self.assertTrue(os.path.isfile(out_name))
         with zipfile.ZipFile(out_name, 'r') as archive:
-            self.assertEqual(len(archive.filelist), 5)
+            self.assertEqual(len(archive.filelist), 6)
 
         # Clean
         os.remove(out_name)
@@ -34,9 +34,15 @@ class TestCore(unittest.TestCase):
         updater.create_archive("tests/in", ignore_list=updater.COMMON_FILTERS, package_name=out_name,
                                to_remove=['in/C.txt', 'in/B.txt', 'in/not_here'])
 
+        # Prepare out path
         out_path = 'tests/out'
         shutil.rmtree(out_path, ignore_errors=True)
-        updater.apply_archive(out_name, out_path)
+        os.makedirs("tests/out", exist_ok=True)
+        with open('tests/out/to_backup', 'w') as f:
+            f.write("To backup !")
+
+        # Apply
+        updater.apply_archive(out_name, out_path, 'tests')
 
         # Check
         self.assertTrue(os.path.isfile('%s/in/A.txt' % out_path))
@@ -44,6 +50,13 @@ class TestCore(unittest.TestCase):
         self.assertFalse(os.path.isfile('%s/in/B.txt' % out_path))
         self.assertFalse(os.path.isfile('%s/in/C.txt' % out_path))
 
+        # Check backup
+        backup_path = 'tests/backup.zip'
+        self.assertTrue(os.path.isfile(backup_path))
+        with zipfile.ZipFile(backup_path) as f:
+            self.assertIn("out/to_backup", f.namelist())
+
         # Clean
         os.remove(out_name)
+        os.remove(backup_path)
         shutil.rmtree(out_path, ignore_errors=True)

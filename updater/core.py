@@ -5,6 +5,8 @@
 import os
 import re
 import zipfile
+import psutil
+import sys
 
 from . import helpers
 
@@ -65,18 +67,26 @@ def create_archive(path, output_path=None, ignore_list=None, package_name=None, 
         if to_remove is not None:
             out.writestr(helpers.TO_REMOVE_FILE, "\n".join(to_remove))
 
+        # Add list of files to ignore
+        if len(ignore_list) > 0:
+            out.writestr(helpers.IGNORE_LIST_FILE, "\n".join(ignore_list))
 
-def apply_archive(in_path, out_path):
+
+def apply_archive(in_path, out_path, backup_path='.'):
     """ Apply an update archive.
 
     :param in_path: Input archive path.
     :param out_path: Output directory path.
+    :param backup_path: Path of the backup archive. If none, no backup is performed.
     :type in_path: str
     :type out_path: str
+    :type backup_path: str
     """
 
     # Extract all files
     with zipfile.ZipFile(in_path) as archive:
+        if backup_path is not None:
+            _backup(archive, out_path, backup_path)
         archive.extractall(out_path, filter(lambda n: n not in helpers.RESERVED_FILES, archive.namelist()))
 
         # Remove files
@@ -90,3 +100,41 @@ def apply_archive(in_path, out_path):
         except KeyError:  # No file to remove since no list is provided
             pass
 
+
+def _backup(archive, out_path, backup_path):
+    """ Backup before applying the archive.
+
+    :param archive: Input archive.
+    :param out_path: Target output path to backup.
+    :param backup_path: Path  where to write the backup archive.
+    :type archive: zipfile.ZipFile
+    :type out_path: str
+    :type backup_path: str
+    """
+
+    # Fetch the ignore list from the input archive
+    try:
+        ignore_list = archive.read(helpers.IGNORE_LIST_FILE).decode().split('\n')
+    except KeyError:  # No file to remove since no list is provided
+        ignore_list = None
+
+    # Backup
+    create_archive(out_path, output_path=backup_path, ignore_list=ignore_list, package_name='backup.zip')
+
+
+def restart_program():
+    """Restarts the current program, with file objects and descriptors
+       cleanup.
+       Source: https://stackoverflow.com/questions/11329917/restart-python-script-from-within-itself
+       Original author: s3ni0r
+    """
+
+    try:
+        p = psutil.Process(os.getpid())
+        for handler in p.get_open_files() + p.connections():
+            os.close(handler.fd)
+    except Exception as e:
+        print(e, file=sys.stderr)
+
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
